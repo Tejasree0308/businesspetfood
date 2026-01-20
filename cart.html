@@ -1,0 +1,149 @@
+<!-- text-->
+
+<div class="button-group">
+    <button type="submit" class="btn btn-primary">Submit Review</button>
+    <button type="button" class="btn btn-secondary" onclick="downloadAllReviews()">📥 All Reviews</button>
+</div>
+
+// ========== EXPORT ALL REVIEWS TO TEXT FILE ==========
+function downloadAllReviews() {
+    const reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+    
+    if (reviews.length === 0) {
+        showNotification("❌ No reviews available to download");
+        return;
+    }
+    
+    // Create formatted text content
+    let textContent = "========================================\n";
+    textContent += "   PAWFECT EATS - CUSTOMER REVIEWS\n";
+    textContent += "========================================\n\n";
+    textContent += `Total Reviews: ${reviews.length}\n`;
+    textContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    textContent += "========================================\n\n";
+    
+    reviews.forEach((review, index) => {
+        textContent += `REVIEW #${index + 1}\n`;
+        textContent += `${"=".repeat(40)}\n`;
+        textContent += `Customer Name: ${review.name}\n`;
+        textContent += `Email: ${review.email}\n`;
+        textContent += `Product: ${review.product}\n`;
+        textContent += `Rating: ${"⭐".repeat(parseInt(review.rating))} (${review.rating}/5)\n`;
+        textContent += `Date: ${review.date}\n`;
+        textContent += `\nReview:\n${review.text}\n`;
+        textContent += `\n${"=".repeat(40)}\n\n`;
+    });
+    
+    textContent += "\n========================================\n";
+    textContent += "        END OF REVIEWS DOCUMENT\n";
+    textContent += "========================================\n";
+    
+    // Create blob and download
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Pawfect_Eats_Reviews_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showNotification("✅ All reviews downloaded successfully!");
+}
+
+/* ========== BUTTON GROUP FOR REVIEW FORM ========== */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button-group button {
+    flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+    }
+}
+
+<!--doc file-->
+
+function downloadAllReviews() {
+    const reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+    if (reviews.length === 0) {
+        showNotification("❌ No reviews available");
+        return;
+    }
+    
+    let docContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'><title>Pawfect Eats Reviews</title></head>
+    <body>
+    <h1 style="text-align:center; color:#ff6b35;">🐾 PAWFECT EATS - CUSTOMER REVIEWS</h1>
+    <p style="text-align:center;"><strong>Total Reviews:</strong> ${reviews.length}</p>
+    <p style="text-align:center;"><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+    <hr>`;
+    
+    reviews.forEach((r, i) => {
+        docContent += `
+        <div style="margin: 20px 0; padding: 15px; border-left: 4px solid #ff6b35; background: #f9f9f9;">
+            <h3>Review #${i + 1}</h3>
+            <p><strong>Customer Name:</strong> ${r.name}</p>
+            <p><strong>Email:</strong> ${r.email}</p>
+            <p><strong>Product:</strong> ${r.product}</p>
+            <p><strong>Rating:</strong> ${"⭐".repeat(parseInt(r.rating))} (${r.rating}/5)</p>
+            <p><strong>Date:</strong> ${r.date}</p>
+            <p><strong>Review:</strong><br>${r.text}</p>
+        </div>
+        <hr>`;
+    });
+    
+    docContent += `</body></html>`;
+    
+    const blob = new Blob(['\ufeff', docContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Pawfect_Eats_Reviews_${new Date().toISOString().split('T')[0]}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification("✅ Reviews downloaded as DOC!");
+}
+
+<!--discount button-->
+
+<div class="summary-row" id="discountRow" style="display:none;">
+    <span>Discount</span>
+    <span id="discount">-₹0</span>
+</div>
+inside cart summary above tax
+
+function updateSummary() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    const originalSubtotal = cart.reduce(
+        (sum, item) => sum + item.price * item.qty,
+        0
+    );
+
+    let discount = 0;
+
+    if (originalSubtotal >= 1000) {
+        discount = Math.round(originalSubtotal * 0.10);
+        document.getElementById("discountRow").style.display = "flex";
+        document.getElementById("discount").textContent = "-₹" + discount;
+    } else {
+        document.getElementById("discountRow").style.display = "none";
+    }
+
+    const discountedSubtotal = originalSubtotal - discount;
+    const tax = Math.round(discountedSubtotal * 0.05);
+    const total = discountedSubtotal + tax;
+
+    document.getElementById("subtotal").textContent = "₹" + originalSubtotal;
+    document.getElementById("tax").textContent = "₹" + tax;
+    document.getElementById("total").textContent = "₹" + total;
+}
