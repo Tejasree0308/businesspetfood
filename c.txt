@@ -1,2 +1,403 @@
+<!-- ADD THIS CODE IN CART PAGE - Before Cart Summary Section -->
+
+<!-- COUPON CODE SECTION -->
+<div class="coupon-section">
+    <div class="coupon-input-group">
+        <input 
+            type="text" 
+            id="couponCode" 
+            placeholder="Enter coupon code (e.g., BUMPER20)" 
+            maxlength="20"
+        >
+        <button class="btn btn-primary" onclick="applyCoupon()">Apply Coupon</button>
+    </div>
+    <div id="couponMessage" class="coupon-message"></div>
+    <div id="couponDiscount" class="coupon-discount" style="display: none;">
+        ✅ Coupon Applied: <span id="couponText">BUMPER20</span> - 20% OFF
+    </div>
+</div>
+
+<!-- UPDATED CART SUMMARY SECTION - WITH COUPON DISCOUNT -->
+<div class="cart-summary">
+    <h3>Order Summary</h3>
+    <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="subtotal">₹0</span>
+    </div>
+    <div class="summary-row">
+        <span>Combo Discount (15%)</span>
+        <span id="comboDiscount">₹0</span>
+    </div>
+    <div id="couponDiscountRow" class="summary-row" style="display: none;">
+        <span>Coupon Discount (20%)</span>
+        <span id="couponDiscountAmount">₹0</span>
+    </div>
+    <div class="summary-row">
+        <span>Tax (5%)</span>
+        <span id="tax">₹0</span>
+    </div>
+    <div class="summary-row total">
+        <span>Total</span>
+        <span id="total">₹0</span>
+    </div>
+    <button class="btn btn-primary" onclick="checkout()" id="checkoutBtn">Checkout</button>
+    <button class="btn btn-secondary" onclick="closePage('cartPage')">Continue Shopping</button>
+</div>
+
+/* ========== COUPON CODE STYLING ========== */
+
+.coupon-section {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+}
+
+.coupon-input-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.coupon-input-group input {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: border-color 0.3s;
+}
+
+.coupon-input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.coupon-input-group button {
+    padding: 12px 24px;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.coupon-input-group button:hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+}
+
+.coupon-message {
+    min-height: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.coupon-message.error {
+    background: #fee;
+    color: #c33;
+    display: block;
+}
+
+.coupon-message.success {
+    background: #efe;
+    color: #3c3;
+    display: block;
+}
+
+.coupon-discount {
+    background: #e8f5e9;
+    border: 2px solid #4caf50;
+    color: #2e7d32;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.coupon-discount span {
+    font-weight: 700;
+    color: #1565c0;
+}
+
+/* ========== RESPONSIVE COUPON ========== */
+
+@media (max-width: 768px) {
+    .coupon-input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .coupon-input-group button {
+        width: 100%;
+    }
+
+    .coupon-section {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+}   
+
+
+// ========== COUPON CODE SYSTEM ==========
+
+// Valid coupon codes and their discounts
+const VALID_COUPONS = {
+    "BUMPER20": 20,  // 20% discount
+    "SAVE10": 10,    // 10% discount (optional)
+    "FLAT50": 50     // ₹50 flat discount (optional)
+};
+
+let appliedCoupon = null;
+let couponDiscount = 0;
+
+// ========== APPLY COUPON FUNCTION ==========
+function applyCoupon() {
+    const couponInput = document.getElementById("couponCode").value.trim().toUpperCase();
+    const messageEl = document.getElementById("couponMessage");
+    const discountEl = document.getElementById("couponDiscount");
+    
+    // Reset messages
+    messageEl.className = "coupon-message";
+    messageEl.textContent = "";
+    discountEl.style.display = "none";
+    
+    // Check if coupon field is empty
+    if (!couponInput) {
+        messageEl.className = "coupon-message error";
+        messageEl.textContent = "❌ Please enter a coupon code";
+        return;
+    }
+    
+    // Check if coupon is valid
+    if (!VALID_COUPONS[couponInput]) {
+        messageEl.className = "coupon-message error";
+        messageEl.textContent = "❌ Invalid coupon code. Try: BUMPER20";
+        appliedCoupon = null;
+        couponDiscount = 0;
+        updateSummary();
+        return;
+    }
+    
+    // Apply valid coupon
+    appliedCoupon = couponInput;
+    couponDiscount = VALID_COUPONS[couponInput];
+    
+    messageEl.className = "coupon-message success";
+    messageEl.textContent = "✅ Coupon code applied successfully!";
+    
+    document.getElementById("couponText").textContent = couponInput;
+    discountEl.style.display = "block";
+    
+    // Update cart summary with coupon discount
+    updateSummary();
+    
+    showNotification("🎉 Coupon " + couponInput + " applied! " + couponDiscount + "% OFF");
+}
+
+// ========== REMOVE COUPON FUNCTION ==========
+function removeCoupon() {
+    appliedCoupon = null;
+    couponDiscount = 0;
+    document.getElementById("couponCode").value = "";
+    document.getElementById("couponMessage").textContent = "";
+    document.getElementById("couponMessage").className = "coupon-message";
+    document.getElementById("couponDiscount").style.display = "none";
+    updateSummary();
+    showNotification("❌ Coupon removed");
+}
+
+// ========== UPDATED updateSummary() FUNCTION ==========
+function updateSummary() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    
+    // Check if BOTH discount products (Fish & Rabbit) are in cart
+    const hasDiscountProduct7 = cart.some(item => item.id === 7); // Fish Tank Food
+    const hasDiscountProduct8 = cart.some(item => item.id === 8); // Rabbit Hay
+
+    // Calculate subtotal for regular products
+    let subtotal = 0;
+    let discountProductsSubtotal = 0;
+    
+    cart.forEach(item => {
+        if (item.id === 7 || item.id === 8) {
+            discountProductsSubtotal += item.price * item.qty;
+        } else {
+            subtotal += item.price * item.qty;
+        }
+    });
+
+    let comboDiscount = 0;
+    let discountMsg = "";
+    
+    // Apply 15% combo discount ONLY on the 2 special products if BOTH are purchased
+    if (hasDiscountProduct7 && hasDiscountProduct8) {
+        comboDiscount = Math.round(discountProductsSubtotal * 0.15);
+        discountProductsSubtotal = discountProductsSubtotal - comboDiscount;
+        discountMsg = " ✅ 15% COMBO DISCOUNT ON THESE 2 ITEMS!";
+    }
+    
+    // Total subtotal (regular + discounted products)
+    const totalSubtotal = subtotal + discountProductsSubtotal;
+    
+    // ========== APPLY COUPON DISCOUNT ==========
+    let couponDiscountAmount = 0;
+    let finalSubtotalAfterCoupon = totalSubtotal;
+    
+    if (appliedCoupon && couponDiscount > 0) {
+        couponDiscountAmount = Math.round(totalSubtotal * (couponDiscount / 100));
+        finalSubtotalAfterCoupon = totalSubtotal - couponDiscountAmount;
+        
+        // Show coupon discount row in cart summary
+        document.getElementById("couponDiscountRow").style.display = "flex";
+        document.getElementById("couponDiscountAmount").textContent = "₹" + couponDiscountAmount;
+    } else {
+        // Hide coupon discount row if no coupon applied
+        document.getElementById("couponDiscountRow").style.display = "none";
+    }
+    
+    const tax = Math.round(finalSubtotalAfterCoupon * 0.05);
+    const total = finalSubtotalAfterCoupon + tax;
+
+    // Update display
+    document.getElementById("subtotal").textContent = "₹" + totalSubtotal + discountMsg;
+    document.getElementById("comboDiscount").textContent = comboDiscount > 0 ? "-₹" + comboDiscount : "₹0";
+    document.getElementById("tax").textContent = "₹" + tax;
+    document.getElementById("total").textContent = "₹" + total;
+}
+
+// ========== UPDATED loadCart() FUNCTION ==========
+// Add this inside the loadCart() function where you generate cart items
+
+function loadCart() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const container = document.getElementById("cartItemsList");
+    const empty = document.getElementById("cartEmpty");
+    
+    if (cart.length === 0) {
+        empty.style.display = "block";
+        container.innerHTML = "";
+        document.getElementById("checkoutBtn").disabled = true;
+        updateSummary();
+        return;
+    }
+    
+    empty.style.display = "none";
+    document.getElementById("checkoutBtn").disabled = false;
+    
+    container.innerHTML = cart.map((item, i) => `
+        <div class="cart-item">
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">₹${item.price}</div>
+            <div class="qty-controls">
+                <button class="qty-btn" onclick="updateQty(${i}, -1)">−</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="updateQty(${i}, 1)">+</button>
+            </div>
+            <div class="item-total">₹${item.price * item.qty}</div>
+            <button class="remove-btn" onclick="removeItem(${i})">Remove</button>
+        </div>
+    `).join("");
+    
+    updateSummary();
+}
+
+// ========== UPDATED checkout() FUNCTION ==========
+function checkout() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    if (cart.length === 0) return;
+    
+    // Calculate regular and discount products separately
+    let regularSubtotal = 0;
+    let discountProductsSubtotal = 0;
+    
+    cart.forEach(item => {
+        if (item.id === 7 || item.id === 8) {
+            discountProductsSubtotal += item.price * item.qty;
+        } else {
+            regularSubtotal += item.price * item.qty;
+        }
+    });
+    
+    // Check if BOTH discount products are in cart
+    const hasDiscountProduct7 = cart.some(item => item.id === 7); // Fish Tank Food
+    const hasDiscountProduct8 = cart.some(item => item.id === 8); // Rabbit Hay
+    
+    let comboDiscountAmount = 0;
+    let finalDiscountProductsSubtotal = discountProductsSubtotal;
+    
+    // Apply 15% combo discount ONLY on the 2 special products
+    if (hasDiscountProduct7 && hasDiscountProduct8) {
+        comboDiscountAmount = Math.round(discountProductsSubtotal * 0.15);
+        finalDiscountProductsSubtotal = discountProductsSubtotal - comboDiscountAmount;
+    }
+    
+    // Calculate final subtotal before coupon
+    let finalSubtotal = regularSubtotal + finalDiscountProductsSubtotal;
+    
+    // ========== APPLY COUPON DISCOUNT ==========
+    let couponDiscountAmount = 0;
+    let finalSubtotalAfterCoupon = finalSubtotal;
+    
+    if (appliedCoupon && couponDiscount > 0) {
+        couponDiscountAmount = Math.round(finalSubtotal * (couponDiscount / 100));
+        finalSubtotalAfterCoupon = finalSubtotal - couponDiscountAmount;
+    }
+    
+    const tax = Math.round(finalSubtotalAfterCoupon * 0.05);
+    const total = finalSubtotalAfterCoupon + tax;
+    
+    // Build checkout message
+    let msg = `✅ Order placed! Total: ₹${total} 🎉`;
+    
+    if (hasDiscountProduct7 && hasDiscountProduct8) {
+        msg = `✅ Order placed! 15% COMBO DISCOUNT: -₹${comboDiscountAmount} | `;
+    }
+    
+    if (appliedCoupon && couponDiscount > 0) {
+        msg += `Coupon ${appliedCoupon}: -₹${couponDiscountAmount} | Total: ₹${total} 🎉`;
+    } else if (!hasDiscountProduct7 && !hasDiscountProduct8) {
+        msg = `✅ Order placed! Total: ₹${total} 🎉`;
+    }
+    
+    showNotification(msg);
+    localStorage.removeItem("cart");
+    appliedCoupon = null;
+    couponDiscount = 0;
+    document.getElementById("couponCode").value = "";
+    updateCartCount();
+    
+    setTimeout(() => {
+        showPage("homePage");
+        loadProducts();
+    }, 2000);
+}
+
+// ========== ALLOW ENTER KEY TO APPLY COUPON ==========
+document.addEventListener("DOMContentLoaded", function() {
+    const couponInput = document.getElementById("couponCode");
+    if (couponInput) {
+        couponInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                applyCoupon();
+            }
+        });
+    }
+});
+
+
+
 
 
